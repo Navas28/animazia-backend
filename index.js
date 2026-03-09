@@ -8,70 +8,89 @@ const PORT = process.env.PORT || 5000;
 
 //  Middleware
 
-app.use(cors({ origin: "https://frontend-zoo.vercel.app", credentials: true }));
-app.use(express.json()); 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["https://frontend-zoo.vercel.app", "http://localhost:5173"];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        allowedOrigins.includes("*")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
+);
+app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 app.use(express.urlencoded({ extended: true }));
 
 //  Mongo Db connection
 
 mongoose
-    .connect(process.env.MONGODB_URI, {
-        dbName: "WildAnimals", 
-    })
-    .then(() => console.log("Mongo Db Connected"))
-    .catch((err) => console.error("Mongo Db Connection Error", err));
+  .connect(process.env.MONGODB_URI, {
+    dbName: "WildAnimals",
+  })
+  .then(() => console.log("Mongo Db Connected"))
+  .catch((err) => console.error("Mongo Db Connection Error", err));
 
+app.get("/", (req, res) => {
+  res.send("Animazia Backend");
+});
 
 //   Ticket Booking
 
-const ticketBookingRoutes = require("./routes/ticketBooking")
-app.use("/ticketbooking", ticketBookingRoutes)
+const ticketBookingRoutes = require("./routes/ticketBooking");
+app.use("/ticketbooking", ticketBookingRoutes);
 
+//    Contact Form
 
-//    Contact Form 
-
-const contactRoutes = require("./routes/contact")
-app.use("/contact", contactRoutes)
+const contactRoutes = require("./routes/contact");
+app.use("/contact", contactRoutes);
 
 //     Red List
 
-const animalRoutes = require("./routes/animals")
-app.use("/animals", animalRoutes)
+const animalRoutes = require("./routes/animals");
+app.use("/animals", animalRoutes);
 
 //    Eco Journel
 
-const blogRoutes = require("./routes/blog")
-app.use("/blogs", blogRoutes)
+const blogRoutes = require("./routes/blog");
+app.use("/blogs", blogRoutes);
 
 //     Volunteer Application
 
-const jobApplicationRoutes = require("./routes/jobApplication")
-app.use("/job-apply", jobApplicationRoutes)
+const jobApplicationRoutes = require("./routes/jobApplication");
+app.use("/job-apply", jobApplicationRoutes);
 
 //  Event Booking
 
-const eventRegistrationRoutes = require("./routes/eventRegister")
-app.use("/event-register", eventRegistrationRoutes)
+const eventRegistrationRoutes = require("./routes/eventRegister");
+app.use("/event-register", eventRegistrationRoutes);
 
-//   Donation 
+//   Donation
 
-const donationRoutes = require("./routes/donation")
-app.use("/donate", donationRoutes)
+const donationRoutes = require("./routes/donation");
+app.use("/donate", donationRoutes);
 
 //  Email Subscription
 
-const subscriptionRoutes = require("./routes/subscription")
-app.use("/subscribe", subscriptionRoutes)
+const subscriptionRoutes = require("./routes/subscription");
+app.use("/subscribe", subscriptionRoutes);
 
 // for Unknown Routes
 
 app.use((req, res, next) => {
-    res.status(404).json({ success: false, message: "Route not found" });
+  res.status(404).json({ success: false, message: "Route not found" });
 });
-
 
 app.listen(PORT, () => {
-    console.log(`Server Running on Port ${PORT}`);
+  console.log(`Server Running on Port ${PORT}`);
 });
-
